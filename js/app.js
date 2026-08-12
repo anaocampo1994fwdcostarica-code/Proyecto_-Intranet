@@ -143,6 +143,8 @@ function mostrarPanel(usuario) {
         document.getElementById("panel-admin").classList.add("panel-activo");
         document.getElementById("nombre-admin").textContent = usuario.nombre;
         renderTablaUsuarios();
+        cargarEstudiantesEnSelectAdmin();
+        renderTablaCalificacionesAdmin();
         renderComunicados("lista-comunicados-admin");
     } else if (usuario.rol === "docente") {
         document.getElementById("panel-docente").classList.add("panel-activo");
@@ -275,6 +277,87 @@ function renderTablaCalificacionesDocente(docente) {
         `;
         tbody.appendChild(tr);
     });
+}
+
+function cargarEstudiantesEnSelectAdmin() {
+    const usuarios = obtenerUsuarios();
+    const estudiantes = usuarios.filter(u => u.rol === "estudiante");
+    const select = document.getElementById("admin-calif-estudiante");
+    select.innerHTML = "";
+
+    estudiantes.forEach(e => {
+        const option = document.createElement("option");
+        option.value = e.id;
+        option.textContent = e.nombre;
+        select.appendChild(option);
+    });
+}
+
+function renderTablaCalificacionesAdmin() {
+    const calificaciones = obtenerCalificaciones();
+    const usuarios = obtenerUsuarios();
+    const tbody = document.querySelector("#tabla-calificaciones-admin tbody");
+    tbody.innerHTML = "";
+
+    calificaciones.forEach(c => {
+        const estudiante = usuarios.find(u => u.id === c.estudianteId);
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${estudiante ? estudiante.nombre : "Desconocido"}</td>
+            <td>${c.materia}</td>
+            <td class="${claseNota(c.nota)}">${c.nota}</td>
+            <td>${c.fecha}</td>
+            <td>
+                <button class="btn btn-sm btn-outline" onclick="editarCalificacionAdmin(${c.id})">Editar</button>
+                <button class="btn btn-sm btn-danger" onclick="eliminarCalificacionAdmin(${c.id})">Eliminar</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function mostrarFormCalificacionAdmin(editando = false) {
+    const container = document.getElementById("form-calificacion-admin-container");
+    const form = document.getElementById("form-calificacion-admin");
+    const titulo = document.getElementById("form-calificacion-admin-titulo");
+
+    cargarEstudiantesEnSelectAdmin();
+    container.style.display = "block";
+    titulo.textContent = editando ? "Editar calificación" : "Nueva calificación";
+
+    if (!editando) {
+        form.reset();
+        document.getElementById("admin-calif-id").value = "";
+        document.getElementById("admin-calif-fecha").value = fechaHoy();
+    }
+}
+
+function ocultarFormCalificacionAdmin() {
+    document.getElementById("form-calificacion-admin-container").style.display = "none";
+    document.getElementById("form-calificacion-admin").reset();
+    document.getElementById("admin-calif-id").value = "";
+}
+
+function editarCalificacionAdmin(id) {
+    const calificaciones = obtenerCalificaciones();
+    const calificacion = calificaciones.find(c => c.id === id);
+    if (!calificacion) return;
+
+    document.getElementById("admin-calif-id").value = calificacion.id;
+    document.getElementById("admin-calif-estudiante").value = calificacion.estudianteId;
+    document.getElementById("admin-calif-materia").value = calificacion.materia;
+    document.getElementById("admin-calif-nota").value = calificacion.nota;
+    document.getElementById("admin-calif-fecha").value = calificacion.fecha;
+
+    mostrarFormCalificacionAdmin(true);
+}
+
+function eliminarCalificacionAdmin(id) {
+    if (!confirm("¿Querés eliminar esta calificación?")) return;
+
+    const calificaciones = obtenerCalificaciones().filter(c => c.id !== id);
+    guardarCalificaciones(calificaciones);
+    renderTablaCalificacionesAdmin();
 }
 
 function mostrarFormCalificacion() {
@@ -479,7 +562,7 @@ document.addEventListener("DOMContentLoaded", function () {
         let usuarios = obtenerUsuarios();
 
         if (id) {
-            const index = users.findIndex(u => u.id === parseInt(id));
+            const index = usuarios.findIndex(u => u.id === parseInt(id));
             if (index !== -1) {
                 usuarios[index].nombre = nombre;
                 usuarios[index].usuario = usuario;
@@ -531,6 +614,33 @@ document.addEventListener("DOMContentLoaded", function () {
         guardarCalificaciones(calificaciones);
         ocultarFormCalificacion();
         renderTablaCalificacionesDocente(sesion);
+    });
+
+    // Form calificación (admin)
+    document.getElementById("form-calificacion-admin").addEventListener("submit", function (e) {
+        e.preventDefault();
+        const calificaciones = obtenerCalificaciones();
+        const id = document.getElementById("admin-calif-id").value;
+        const data = {
+            estudianteId: parseInt(document.getElementById("admin-calif-estudiante").value),
+            materia: document.getElementById("admin-calif-materia").value,
+            nota: parseInt(document.getElementById("admin-calif-nota").value),
+            fecha: document.getElementById("admin-calif-fecha").value,
+            docenteId: getSesion()?.id || 1
+        };
+
+        if (id) {
+            const index = calificaciones.findIndex(c => c.id === parseInt(id));
+            if (index !== -1) {
+                calificaciones[index] = { ...calificaciones[index], ...data };
+            }
+        } else {
+            calificaciones.push({ id: generarId(calificaciones), ...data });
+        }
+
+        guardarCalificaciones(calificaciones);
+        ocultarFormCalificacionAdmin();
+        renderTablaCalificacionesAdmin();
     });
 
     // Form comunicado (admin)
