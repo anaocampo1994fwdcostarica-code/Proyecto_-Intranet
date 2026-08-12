@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Intranet Escolar</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+    <!-- ==================== LOGIN ==================== -->
+    <section id="login" class="seccion-activa">
+        <div class="login-card">
+            <h1>Intranet Escolar</h1>
+            <p class="subtitle">Sistema de gestión interna</p>
+
+            <form id="form-login">
+                <div class="form-group">
+                    <label for="input-usuario">Usuario</label>
+                    <input type="text" id="input-usuario" placeholder="Ej: admin" required autocomplete="username">
+                </div>
+                <div class="form-group">
+                    <label for="input-password">Contraseña</label>
+                    <input type="password" id="input-password" placeholder="Tu contraseña" required autocomplete="current-password">
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">Iniciar sesión</button>
+            </form>
+
+            <div id="login-error" class="error-msg" style="display:none;">
+                Usuario o contraseña incorrectos
+            </div>
+
+            <div class="login-info">
+                <p>Usuarios de prueba:</p>
+                <code>admin / admin123</code><br>
+                <code>mgarcia / docente123</code><br>
+                <code>jperez / estudiante123</code>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== PANEL ADMIN ==================== -->
+    <section id="panel-admin" class="panel">
+        <header class="navbar">
+            <h2>Panel de Administración</h2>
+            <div class="navbar-right">
+                <span id="nombre-admin"></span>
+                <button class="btn btn-outline" onclick="cerrarSesion()">Cerrar sesión</button>
+            </div>
+        </header>
+
+        <nav class="tabs">
+            <button class="tab-btn activo" data-tab="admin-usuarios">Usuarios</button>
+            <button class="tab-btn" data-tab="admin-comunicados">Comunicados</button>
+        </nav>
+
+        <!-- Tab: Usuarios -->
+        <div id="admin-usuarios" class="tab-content activo">
+            <div class="section-header">
+                <h3>Gestión de usuarios</h3>
+                <button class="btn btn-primary" onclick="mostrarFormUsuario()">+ Nuevo usuario</button>
+            </div>
+
+            <!-- Formulario alta/editar usuario -->
+            <div id="form-usuario-container" class="card" style="display:none;">
+                <h4 id="form-usuario-titulo">Nuevo usuario</h4>
+                <form id="form-usuario">
+                    <input type="hidden" id="usuario-id">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="usuario-nombre">Nombre completo</label>
+                            <input type="text" id="usuario-nombre" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="usuario-user">Usuario</label>
+                            <input type="text" id="usuario-user" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="usuario-pass">Contraseña</label>
+                            <input type="password" id="usuario-pass">
+                        </div>
+                        <div class="form-group">
+                            <label for="usuario-rol">Rol</label>
+                            <select id="usuario-rol" required>
+                                <option value="admin">Administración</option>
+                                <option value="docente">Docente</option>
+                                <option value="estudiante">Estudiante</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+                        <button type="button" class="btn btn-outline" onclick="ocultarFormUsuario()">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Tabla de usuarios -->
+            <div class="table-container">
+                <table id="tabla-usuarios">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Usuario</th>
+                            <th>Rol</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Tab: Comunicados (admin) -->
+        <div id="admin-comunicados" class="tab-content">
+            <div class="section-header">
+                <h3>Tablón de comunicados</h3>
+                <button class="btn btn-primary" onclick="mostrarFormComunicado()">+ Nuevo comunicado</button>
+            </div>
+
+            <div id="form-comunicado-container" class="card" style="display:none;">
+                <h4>Nuevo comunicado</h4>
+                <form id="form-comunicado">
+                    <div class="form-group">
+                        <label for="comunicado-titulo">Título</label>
+                        <input type="text" id="comunicado-titulo" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="comunicado-contenido">Contenido</label>
+                        <textarea id="comunicado-contenido" rows="4" required></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Publicar</button>
+                        <button type="button" class="btn btn-outline" onclick="ocultarFormComunicado()">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+
+            <div id="lista-comunicados-admin"></div>
+        </div>
+    </section>
+
+    <!-- ==================== PANEL DOCENTE ==================== -->
+    <section id="panel-docente" class="panel">
+        <header class="navbar">
+            <h2>Panel de Docente</h2>
+            <div class="navbar-right">
+                <span id="nombre-docente"></span>
+                <button class="btn btn-outline" onclick="cerrarSesion()">Cerrar sesión</button>
+            </div>
+        </header>
+
+        <nav class="tabs">
+            <button class="tab-btn activo" data-tab="docente-calificaciones">Calificaciones</button>
+            <button class="tab-btn" data-tab="docente-asistencia">Asistencia</button>
+            <button class="tab-btn" data-tab="docente-comunicados">Comunicados</button>
+        </nav>
+
+        <!-- Tab: Calificaciones -->
+        <div id="docente-calificaciones" class="tab-content activo">
+            <div class="section-header">
+                <h3>Registro de calificaciones</h3>
+                <button class="btn btn-primary" onclick="mostrarFormCalificacion()">+ Nueva calificación</button>
+            </div>
+
+            <div id="form-calificacion-container" class="card" style="display:none;">
+                <h4>Nueva calificación</h4>
+                <form id="form-calificacion">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="calif-estudiante">Estudiante</label>
+                            <select id="calif-estudiante" required></select>
+                        </div>
+                        <div class="form-group">
+                            <label for="calif-materia">Materia</label>
+                            <select id="calif-materia" required>
+                                <option value="Matemáticas">Matemáticas</option>
+                                <option value="Lengua">Lengua</option>
+                                <option value="Ciencias">Ciencias</option>
+                                <option value="Historia">Historia</option>
+                                <option value="Inglés">Inglés</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="calif-nota">Nota (1-10)</label>
+                            <input type="number" id="calif-nota" min="1" max="10" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="calif-fecha">Fecha</label>
+                            <input type="date" id="calif-fecha" required>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+                        <button type="button" class="btn btn-outline" onclick="ocultarFormCalificacion()">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="table-container">
+                <table id="tabla-calificaciones-docente">
+                    <thead>
+                        <tr>
+                            <th>Estudiante</th>
+                            <th>Materia</th>
+                            <th>Nota</th>
+                            <th>Fecha</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Tab: Asistencia -->
+        <div id="docente-asistencia" class="tab-content">
+            <div class="section-header">
+                <h3>Control de asistencia</h3>
+            </div>
+
+            <div class="card">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="asistencia-fecha">Fecha</label>
+                        <input type="date" id="asistencia-fecha">
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table id="tabla-asistencia">
+                        <thead>
+                            <tr>
+                                <th>Estudiante</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div class="form-actions" style="margin-top: 1rem;">
+                    <button class="btn btn-primary" onclick="guardarAsistencia()">Guardar asistencia</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Comunicados (docente) -->
+        <div id="docente-comunicados" class="tab-content">
+            <div class="section-header">
+                <h3>Tablón de comunicados</h3>
+                <button class="btn btn-primary" onclick="mostrarFormComunicado()">+ Nuevo comunicado</button>
+            </div>
+
+            <div id="form-comunicado-container-doc" class="card" style="display:none;">
+                <h4>Nuevo comunicado</h4>
+                <form id="form-comunicado-doc">
+                    <div class="form-group">
+                        <label for="comunicado-titulo-doc">Título</label>
+                        <input type="text" id="comunicado-titulo-doc" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="comunicado-contenido-doc">Contenido</label>
+                        <textarea id="comunicado-contenido-doc" rows="4" required></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Publicar</button>
+                        <button type="button" class="btn btn-outline" onclick="ocultarFormComunicadoDoc()">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+
+            <div id="lista-comunicados-docente"></div>
+        </div>
+    </section>
+
+    <!-- ==================== PANEL ESTUDIANTE ==================== -->
+    <section id="panel-estudiante" class="panel">
+        <header class="navbar">
+            <h2>Panel de Estudiante</h2>
+            <div class="navbar-right">
+                <span id="nombre-estudiante"></span>
+                <button class="btn btn-outline" onclick="cerrarSesion()">Cerrar sesión</button>
+            </div>
+        </header>
+
+        <nav class="tabs">
+            <button class="tab-btn activo" data-tab="estudiante-notas">Mis notas</button>
+            <button class="tab-btn" data-tab="estudiante-comunicados">Comunicados</button>
+        </nav>
+
+        <!-- Tab: Notas -->
+        <div id="estudiante-notas" class="tab-content activo">
+            <h3>Mis calificaciones</h3>
+            <div class="table-container">
+                <table id="tabla-notas-estudiante">
+                    <thead>
+                        <tr>
+                            <th>Materia</th>
+                            <th>Nota</th>
+                            <th>Fecha</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <p id="sin-notas" style="display:none;" class="empty-msg">No hay calificaciones registradas aún.</p>
+        </div>
+
+        <!-- Tab: Comunicados -->
+        <div id="estudiante-comunicados" class="tab-content">
+            <h3>Avisos del centro</h3>
+            <div id="lista-comunicados-estudiante"></div>
+        </div>
+    </section>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
